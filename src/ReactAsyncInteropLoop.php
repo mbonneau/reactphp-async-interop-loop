@@ -13,19 +13,31 @@ class ReactAsyncInteropLoop implements LoopInterface
 
     public function addReadStream($stream, callable $listener)
     {
-        $key = (int) $stream;
-        $this->readStreams[$key] = Loop::get()->onReadable($stream, $listener);
+        $key = (int)$stream;
+        if (isset($this->readStreams[$key])) {
+            // TODO: what should be done here?
+        }
+        $this->readStreams[$key] = Loop::get()->onReadable($stream, function () use ($listener, $stream) {
+            $listener($stream);
+        });
     }
 
     public function addWriteStream($stream, callable $listener)
     {
-        $key = (int) $stream;
-        $this->readStreams[$key] = Loop::get()->onWritable($stream, $listener);
+        $key = (int)$stream;
+
+        if (isset($this->writeStreams[$key])) {
+            // TODO: what should be done here?
+        }
+
+        $this->writeStreams[$key] = Loop::get()->onWritable($stream, function () use ($listener, $stream) {
+            $listener($stream);
+        });
     }
 
     public function removeReadStream($stream)
     {
-        $key = (int) $stream;
+        $key = (int)$stream;
         if (isset($this->readStreams[$key])) {
             Loop::get()->cancel($this->readStreams[$key]);
             unset($this->readStreams[$key]);
@@ -34,7 +46,7 @@ class ReactAsyncInteropLoop implements LoopInterface
 
     public function removeWriteStream($stream)
     {
-        $key = (int) $stream;
+        $key = (int)$stream;
         if (isset($this->writeStreams[$key])) {
             Loop::get()->cancel($this->writeStreams[$key]);
             unset($this->writeStreams[$key]);
@@ -52,13 +64,11 @@ class ReactAsyncInteropLoop implements LoopInterface
         $wrappedCallback = function () use (&$timer, $callback) {
             $callback($timer);
         };
-
-        $millis = $interval * 1000;
-
+        $millis          = $interval * 1000;
         if ($isPeriodic) {
-            $timerKey = Loop::get()->repeat($millis, $callback);
+            $timerKey = Loop::get()->repeat($millis, $wrappedCallback);
         } else {
-            $timerKey = Loop::get()->delay($millis, $callback);
+            $timerKey = Loop::get()->delay($millis, $wrappedCallback);
         }
         $timer = new ReactAsyncInteropTimer(
             $timerKey,
@@ -67,7 +77,6 @@ class ReactAsyncInteropLoop implements LoopInterface
             $this,
             false
         );
-
         return $timer;
     }
 
