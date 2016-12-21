@@ -9,8 +9,8 @@
     ],
     "require": {
         "php": "^7.0 || ^5.5",
-        "react/event-loop": "^0.4.2",
-        "async-interop/event-loop": "^0.3"
+        "async-interop/event-loop": "^0.3",
+        "react/event-loop": "^0.4.2"
     },
     "require-dev": {
         "amphp/loop": "dev-master",
